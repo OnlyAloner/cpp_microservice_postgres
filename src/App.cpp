@@ -1,3 +1,5 @@
+#include <pqxx/pqxx>
+
 #include "./controller/MyController.hpp"
 #include "./AppComponent.hpp"
 
@@ -9,6 +11,7 @@ void run() {
 
   /* Register Components in scope of run() method */
   AppComponent components;
+
 
   /* Get router component */
   OATPP_COMPONENT(std::shared_ptr<oatpp::web::server::HttpRouter>, router);
@@ -31,13 +34,13 @@ void run() {
   /* Run server */
   server.run();
   
+
 }
 
 /**
  *  main
  */
 int main(int argc, const char * argv[]) {
-
   oatpp::base::Environment::init();
 
   run();

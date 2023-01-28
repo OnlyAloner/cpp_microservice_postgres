@@ -45,6 +45,10 @@ public:
     return oatpp::parser::json::mapping::ObjectMapper::createShared();
   }());
 
+  OATPP_CREATE_COMPONENT(std::shared_ptr<CPostgres>, postgres)([] {
+    return std::make_shared<CPostgres>(90, "host=localhost port=5434 dbname=postgres user=postgres password=postgres");
+  }());
+
 };
 
 #endif /* AppComponent_hpp */
