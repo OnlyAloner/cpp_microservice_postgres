@@ -36,51 +36,52 @@ public:
 public:
   
 
-  ENDPOINT("POST", "/names", addName) {
-    auto resp = m_postgres->GetCrud()->Create("Something-New");
+  // ENDPOINT("POST", "/names", addName) {
+  //   auto resp = m_postgres->GetCrud()->Create("Something-New");
 
-    if (resp.second != nullptr) {
-      std::cout << "Error\n";
-      return createResponse(Status::CODE_500, "Internal Server Error");
-    }
+  //   if (resp.second != nullptr) {
+  //     std::cout << "Error\n";
+  //     return createResponse(Status::CODE_500, "Internal Server Error");
+  //   }
 
-    std::cout << resp.first << '\n';
+  //   std::cout << resp.first << '\n';
 
-    return createResponse(Status::CODE_200, "OK");
-  }
+  //   return createResponse(Status::CODE_200, "OK");
+  // }
 
   ENDPOINT("GET", "/names", getNames) {
     auto resp = m_postgres->GetCrud()->GetList();
+
     if (resp.second != nullptr) {
       std::cout << "Error\n";
       return createResponse(Status::CODE_500, "Internal Server Error");
     }
 
-    // std::cout << resp.first.size() << '\n';
-
+    // dto
     auto dto = NamesDto::createShared();
-    dto->statusCode = 200;
     dto->names = {};
 
-    for (int i=0; i<resp.first.size(); i++) {
-      dto->names->push_back(resp.first[i].name);
+    for (int i=0; i<resp.first.size(); ++i) {
+      // std::cout << resp.first[i].id << " " << resp.first[i].name << '\n';
+      dto->names->emplace_back(resp.first[i].name);
     }
+
     return createDtoResponse(Status::CODE_200, dto);
   }
   
-  ENDPOINT("GET", "/", root) {
-    auto dto = MyDto::createShared();
-    dto->statusCode = 200;
-    dto->message = "Hello World!";
-    return createDtoResponse(Status::CODE_200, dto);
-  }
+  // ENDPOINT("GET", "/", root) {
+  //   auto dto = MyDto::createShared();
+  //   dto->statusCode = 200;
+  //   dto->message = "Hello World!";
+  //   return createDtoResponse(Status::CODE_200, dto);
+  // }
 
-  ENDPOINT("GET", "/here", here) {
-    auto dto = MyDto::createShared();
-    dto->statusCode = 200;
-    dto->message = "Hello buddy!";
-    return createDtoResponse(Status::CODE_200, dto);
-  }
+  // ENDPOINT("GET", "/here", here) {
+  //   auto dto = MyDto::createShared();
+  //   dto->statusCode = 200;
+  //   dto->message = "Hello buddy!";
+  //   return createDtoResponse(Status::CODE_200, dto);
+  // }
   
   // TODO Insert Your endpoints here !!!
   

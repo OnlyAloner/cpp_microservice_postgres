@@ -31,7 +31,6 @@ class NamesDto : public oatpp::DTO {
     
   DTO_INIT(NamesDto, DTO)
     
-  DTO_FIELD(Int32, statusCode);
   DTO_FIELD(Vector<String>, names);
     
 };

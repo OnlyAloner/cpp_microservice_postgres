@@ -1,9 +1,8 @@
 #include <pqxx/pqxx>
+#include "oatpp/network/Server.hpp"
 
 #include "./controller/MyController.hpp"
 #include "./AppComponent.hpp"
-
-#include "oatpp/network/Server.hpp"
 
 #include <iostream>
 

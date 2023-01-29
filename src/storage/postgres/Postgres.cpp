@@ -2,11 +2,12 @@
 
 CPostgres::CPostgres(int connSize, std::string connString) : m_crud(this)
 {
-    std::lock_guard<std::mutex> guard(m_dbPoolMutex);
     for (int i = 0; i < connSize; i++) {
         std::cout << "ConnString: " << connString << '\n';
         std::cout << "Creating connection number: " << i << '\n';
-        m_dbPool.emplace(new pqxx::connection(connString));
+        auto conn = new pqxx::connection(connString);
+        auto worker = new pqxx::work((*conn));
+        m_dbPool.emplace(std::make_pair(worker, conn));
     }
 }
 
@@ -14,29 +15,28 @@ CCrud* CPostgres::GetCrud() {
     return &m_crud;
 }
 
-pqxx::connection* CPostgres::GetConnection() {
-    int index = 0;
-
+std::pair<pqxx::work*, pqxx::connection*> CPostgres::GetConnection() {
+    bool index = false;
+    
+    std::pair<pqxx::work*, pqxx::connection*> conn;
     while (true) {
-        std::lock_guard<std::mutex> guard(m_dbPoolMutex);
-        if (!m_dbPool.empty()) {
-            auto conn = m_dbPool.top();
-            defer(m_dbPool.pop());
+        if (index) std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
-            return conn;
+        std::lock_guard<std::mutex> lock(mutex_stack);
+        if (m_dbPool.empty()) {
+            index = true;
+            continue;
         }
 
-        guard.~lock_guard();
-        std::this_thread::sleep_for(std::chrono::milliseconds(1));
-        index++;
-
-        if (index > 30) {
-            throw std::runtime_error("Could not get connection from pool");
-        }
+        conn = m_dbPool.top();
+        m_dbPool.pop();
+        break;
     }
+
+    return conn;
 }
 
-void CPostgres::ReturnConnection(pqxx::connection* connection) {
-    std::lock_guard<std::mutex> guard(m_dbPoolMutex);
+void CPostgres::ReturnConnection(std::pair<pqxx::work*, pqxx::connection*> connection) {
+    std::lock_guard<std::mutex> lock(mutex_stack);
     m_dbPool.emplace(connection);
 }

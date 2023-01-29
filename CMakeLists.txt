@@ -21,9 +21,9 @@ add_library(${project_name}-lib
         src/dto/DTOs.hpp
 )
 FetchContent_Declare(
-  libpqxx
-  GIT_REPOSITORY https://github.com/jtv/libpqxx.git
-  GIT_TAG a6b1d60e74c1427c8ac2324b85cd4a0dc2068332
+        libpqxx
+        GIT_REPOSITORY https://github.com/jtv/libpqxx.git
+        GIT_TAG a6b1d60e74c1427c8ac2324b85cd4a0dc2068332
 )
 set(PQXX_LIBRARIES pqxx_static)
 
