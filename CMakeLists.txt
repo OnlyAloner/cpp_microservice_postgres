@@ -1,6 +1,6 @@
 include(FetchContent)
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.3)
 
 set(project_name my-project) ## rename your project here
 
@@ -12,13 +12,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 add_library(${project_name}-lib
         src/AppComponent.hpp
-        src/controller/MyController.cpp
-        src/controller/MyController.hpp
         src/storage/postgres/Postgres.cpp
         src/storage/postgres/Postgres.hpp
         src/storage/postgres/crud/Crud.hpp
         src/storage/postgres/crud/Crud.cpp
-        src/dto/DTOs.hpp
 )
 FetchContent_Declare(
         libpqxx
@@ -29,14 +26,13 @@ set(PQXX_LIBRARIES pqxx_static)
 
 FetchContent_MakeAvailable(libpqxx)
 
-## link libs
-
-find_package(oatpp 1.3.0 REQUIRED)
+find_package(Crow)
+find_package(Boost "1.81" COMPONENTS filesystem system thread program_options regex asio)
 
 target_link_libraries(${project_name}-lib
-        PUBLIC oatpp::oatpp
-        PUBLIC oatpp::oatpp-test
         PUBLIC ${PQXX_LIBRARIES}
+        PUBLIC Boost::thread
+        PUBLIC Crow::Crow
 )
 
 target_include_directories(${project_name}-lib PUBLIC src)
@@ -45,20 +41,7 @@ target_include_directories(${project_name}-lib PUBLIC src)
 
 add_executable(${project_name}-exe
         src/App.cpp
-        test/app/MyApiTestClient.hpp)
-target_link_libraries(${project_name}-exe ${project_name}-lib)
-add_dependencies(${project_name}-exe ${project_name}-lib)
-
-add_executable(${project_name}-test
-        test/tests.cpp
-        test/app/TestComponent.hpp
-        test/app/MyApiTestClient.hpp
-        test/MyControllerTest.cpp
-        test/MyControllerTest.hpp
 )
 
-target_link_libraries(${project_name}-test ${project_name}-lib)
-add_dependencies(${project_name}-test ${project_name}-lib)
-
-enable_testing()
-add_test(project-tests ${project_name}-test)
+target_link_libraries(${project_name}-exe ${project_name}-lib)
+add_dependencies(${project_name}-exe ${project_name}-lib)

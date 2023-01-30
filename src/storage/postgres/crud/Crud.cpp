@@ -37,6 +37,7 @@ std::pair<std::vector<Name>, std::exception*> CCrud::GetList() {
 
     auto conn = m_postgres->GetConnection();
     auto worker = conn.first;
+    // std::cout << "WORKER\n";
     // defer(m_postgres->ReturnConnection(conn));
 
     // auto worker = m_postgres->worker;
@@ -60,7 +61,8 @@ std::pair<std::vector<Name>, std::exception*> CCrud::GetList() {
     {
         m_postgres->ReturnConnection(conn);
         std::cout << e.what() << '\n';
-        return std::make_pair(names, nullptr);
+        auto excep = new std::exception(e);
+        return std::make_pair(names, excep);
     }
 }
 // std::pair<Name, std::exception*> CCrud::GetByPk(std::string id) {

@@ -7,7 +7,8 @@ CPostgres::CPostgres(int connSize, std::string connString) : m_crud(this)
         std::cout << "Creating connection number: " << i << '\n';
         auto conn = new pqxx::connection(connString);
         auto worker = new pqxx::work((*conn));
-        m_dbPool.emplace(std::make_pair(worker, conn));
+        auto connPair = std::make_pair(worker, conn);
+        m_dbPool.emplace(connPair);
     }
 }
 
@@ -17,8 +18,9 @@ CCrud* CPostgres::GetCrud() {
 
 std::pair<pqxx::work*, pqxx::connection*> CPostgres::GetConnection() {
     bool index = false;
-    
     std::pair<pqxx::work*, pqxx::connection*> conn;
+
+#ifdef MUTEX_STACK
     while (true) {
         if (index) std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
@@ -32,11 +34,16 @@ std::pair<pqxx::work*, pqxx::connection*> CPostgres::GetConnection() {
         m_dbPool.pop();
         break;
     }
+#endif
 
     return conn;
 }
 
 void CPostgres::ReturnConnection(std::pair<pqxx::work*, pqxx::connection*> connection) {
+#ifdef MUTEX_STACK
     std::lock_guard<std::mutex> lock(mutex_stack);
+#endif
+
     m_dbPool.emplace(connection);
+
 }
