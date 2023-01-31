@@ -6,7 +6,7 @@ class CPostgres;
 #include <vector>
 #include <utility>
 #include <iostream>
-#include "../../../pkg/defer/Defer.hpp"
+#include <pqxx/pqxx>
 
 struct Name {
     std::string id;
@@ -21,7 +21,7 @@ public:
     // ~CCrud();
 
     std::pair<std::string, std::exception*> Create(std::string name);
-    std::pair<std::vector<Name>, std::exception*> GetList();
+    int GetList(std::vector<Name>& resp);
     std::pair<Name, std::exception*> GetByPk(std::string id);
     std::pair<std::string, std::exception*> Update(std::string name, std::string id);
     std::exception* Delete(std::string id);

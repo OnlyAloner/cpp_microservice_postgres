@@ -1,45 +1,95 @@
 #include "Postgres.hpp"
+struct nameR {
+    std::string name;
+};
 
-CPostgres::CPostgres(int connSize, std::string connString) : m_crud(this)
+CPostgres::CPostgres(int connSize, std::string connString, crow::SimpleApp& app) : m_crud(this), connString(connString)
 {
+    // dbPool = new dmitigr::pgfe::Connection_pool(90,
+    //         dmitigr::pgfe::Connection_options{}
+    //         .set(dmitigr::pgfe::Communication_mode::net)
+    //         .set_hostname("localhost")
+    //         .set_port(5434)
+    //         .set_database("postgres")
+    //         .set_username("postgres")
+    //         .set_password("postgres"));
+
+    // dbPool->connect();
+
+
+    CROW_ROUTE(app, "/")([this](){
+        std::vector<Name> resp;
+        if (this->GetCrud()->GetList(resp)) {
+            std::cout << "ERROR\n";
+            return crow::response(500, "");
+        }
+
+        std::string ans = "";
+        for (auto x:resp) {
+          ans += x.name;
+        }
+
+        return crow::response(200, ans);
+    });
+    // cds::threading::Manager::attachThread();
+
+
     for (int i = 0; i < connSize; i++) {
         std::cout << "ConnString: " << connString << '\n';
         std::cout << "Creating connection number: " << i << '\n';
-        auto conn = new pqxx::connection(connString);
-        auto worker = new pqxx::work((*conn));
-        auto connPair = std::make_pair(worker, conn);
-        m_dbPool.emplace(connPair);
+        auto conn = new dmitigr::pgfe::Connection(dmitigr::pgfe::Connection_options{}
+            .set(dmitigr::pgfe::Communication_mode::net)
+            .set_hostname("localhost")
+            .set_port(5434)
+            .set_database("postgres")
+            .set_username("postgres")
+            .set_password("postgres"));
+
+        conn->connect();
+        m_dbPool.emplace(conn);
     }
+
+    // cds::threading::Manager::detachThread();
 }
 
 CCrud* CPostgres::GetCrud() {
     return &m_crud;
 }
 
-std::pair<pqxx::work*, pqxx::connection*> CPostgres::GetConnection() {
+dmitigr::pgfe::Connection* CPostgres::GetConnection() {
     bool index = false;
-    std::pair<pqxx::work*, pqxx::connection*> conn;
+    // cds::threading::Manager::attachThread();
 
-#ifdef MUTEX_STACK
-    while (true) {
-        if (index) std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    // dmitigr::pgfe::Connection* conn;
+    std::lock_guard<std::mutex> lock(mutex_stack);
+    auto conn = m_dbPool.top();
+    m_dbPool.pop();
+    return conn;
 
-        std::lock_guard<std::mutex> lock(mutex_stack);
-        if (m_dbPool.empty()) {
-            index = true;
-            continue;
-        }
+    // while (conn.first == nullptr) {
+    //     m_dbPool.pop(conn);
 
-        conn = m_dbPool.top();
-        m_dbPool.pop();
-        break;
-    }
-#endif
+    //     std::this_thread::sleep_for(std::chrono::milliseconds(index));
+    //     index = true;
+    // }
+
+// #ifdef MUTEX_STACK
+//     while (true) {
+//         std::this_thread::sleep_for(std::chrono::milliseconds(index));
+
+//         if (m_dbPool.empty()) {
+//             index = true;
+//             continue;
+//         }
+
+//     }
+// #endif
 
     return conn;
 }
 
-void CPostgres::ReturnConnection(std::pair<pqxx::work*, pqxx::connection*> connection) {
+void CPostgres::ReturnConnection(dmitigr::pgfe::Connection* connection) {
+    // cds::threading::Manager::attachThread();
 #ifdef MUTEX_STACK
     std::lock_guard<std::mutex> lock(mutex_stack);
 #endif

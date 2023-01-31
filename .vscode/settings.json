@@ -78,7 +78,13 @@
         "map": "cpp",
         "ranges": "cpp",
         "utility": "cpp",
-        "shared_mutex": "cpp"
+        "shared_mutex": "cpp",
+        "any": "cpp",
+        "codecvt": "cpp",
+        "csignal": "cpp",
+        "coroutine": "cpp",
+        "queue": "cpp",
+        "regex": "cpp"
     },
     "cmake.configureOnOpen": false
 }

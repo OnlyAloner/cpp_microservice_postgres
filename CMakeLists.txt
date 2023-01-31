@@ -1,6 +1,6 @@
 include(FetchContent)
 
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.16)
 
 set(project_name my-project) ## rename your project here
 
@@ -26,13 +26,27 @@ set(PQXX_LIBRARIES pqxx_static)
 
 FetchContent_MakeAvailable(libpqxx)
 
+FetchContent_Declare(
+        libcds
+        GIT_REPOSITORY https://github.com/khizmax/libcds
+        GIT_TAG master
+)
+set(CDS_LIBRARIES cds)
+
+FetchContent_MakeAvailable(libcds)
+
+
 find_package(Crow)
-find_package(Boost "1.81" COMPONENTS filesystem system thread program_options regex asio)
+find_package(Boost "1.81.0" COMPONENTS filesystem system thread program_options regex)
+find_package(dmitigr_libs)
 
 target_link_libraries(${project_name}-lib
         PUBLIC ${PQXX_LIBRARIES}
         PUBLIC Boost::thread
+        # PUBLIC Boost::tuple
         PUBLIC Crow::Crow
+        PUBLIC ${CDS_LIBRARIES}
+        PUBLIC dmitigr_pgfe
 )
 
 target_include_directories(${project_name}-lib PUBLIC src)

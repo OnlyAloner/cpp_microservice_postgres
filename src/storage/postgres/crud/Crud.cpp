@@ -32,37 +32,31 @@ CCrud::CCrud(CPostgres* postgres) : m_postgres(postgres)
 //         return std::make_pair("Error", err);
 //     }
 // }
-std::pair<std::vector<Name>, std::exception*> CCrud::GetList() {
-    // auto conn = m_postgres->conn;
-
+int CCrud::GetList(std::vector<Name>& resp) {
     auto conn = m_postgres->GetConnection();
-    auto worker = conn.first;
-    // std::cout << "WORKER\n";
-    // defer(m_postgres->ReturnConnection(conn));
-
-    // auto worker = m_postgres->worker;
-    // defer(worker.commit());
 
     std::vector<Name> names;
     try
     {
-        pqxx::result response = (*worker).exec("SELECT * FROM names LIMIT 10;");
+        {
+            conn->execute([&resp](auto&& r)
+            {
+                Name name;
+                name.id = to<std::string>(r[0]);
+                name.name = to<std::string>(r[1]);
 
-        for (auto x:response) {
-            Name name;
-            name.id = x[0].c_str();
-            name.name = x[1].c_str();
-            names.push_back(name);
+                resp.emplace_back(name);
+            }, "SELECT * FROM names LIMIT 10");
+            m_postgres->ReturnConnection(conn);
         }
-        m_postgres->ReturnConnection(conn);
-        return std::make_pair(names, nullptr);
+
+        return 0;
     }
-    catch (const std::exception& e)
+    catch (const dmitigr::pgfe::Client_exception& e)
     {
-        m_postgres->ReturnConnection(conn);
-        std::cout << e.what() << '\n';
+        std::cout << "HERE: " << e.what() << '\n';
         auto excep = new std::exception(e);
-        return std::make_pair(names, excep);
+        return 1;
     }
 }
 // std::pair<Name, std::exception*> CCrud::GetByPk(std::string id) {
